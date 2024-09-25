@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -15,18 +14,22 @@ import (
 // 获取未提交的文件列表
 func getUncommittedFiles(sourceDir string) ([]string, error) {
 	os.Chdir(sourceDir)
-	cmd := exec.Command("git", "status", "--porcelain")
-	out, err := cmd.Output()
+	// git ls-files -m && git ls-files --others --exclude-standard
+	// cmd := exec.Command("git", "status", "--porcelain")
+	// out, err := cmd.Output()
+	out, err := RunCommand("git ls-files -m && git ls-files --others --exclude-standard")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get uncommitted files: %w", err)
 	}
 
-	var files []string
-	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
-		if len(line) > 3 {
-			files = append(files, strings.TrimSpace(line[3:])) // 截取文件路径部分
-		}
-	}
+	// var files []string
+	files := strings.Split(strings.TrimSpace(string(out)), "\n")
+	// for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+	// 	files = append(files, line)
+	// 	// if len(line) > 3 {
+	// 	// 	files = append(files, strings.TrimSpace(line[3:])) // 截取文件路径部分
+	// 	// }
+	// }
 	return files, nil
 }
 

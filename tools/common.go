@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -15,6 +16,19 @@ func GetUserHomePath() string {
 		return "~"
 	}
 	return dirPath
+}
+
+// 执行长命令
+func RunCommand(command string) (string, error) {
+	cmd := exec.Command("bash", "-c", command) // 使用 bash 运行命令
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	return out.String(), nil
 }
 
 // 获取git根目录
