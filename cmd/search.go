@@ -145,35 +145,6 @@ func (m *searchModel) View() string {
 	return s
 }
 
-// func (m *searchModel) View() string {
-// 	s := "使用上下键选择命令，按空格选择，回车执行，ESC 退出\n"
-// 	s += fmt.Sprintf("输入关键字进行筛选: %s\n\n", m.searchTerm)
-
-// 	for i, command := range m.filtered {
-// 		cursor := " " // 光标指示符
-// 		if m.cursor == i {
-// 			cursor = ">" // 当前光标所在位置
-// 		}
-
-// 		checked := " " // 选择状态
-// 		if isSelected(m.selected, command) {
-// 			checked = "√"
-// 		}
-
-// 		s += fmt.Sprintf("%s [%s] %s（%s）\n", cursor, checked, highlight(command.Value, m.searchTerm), command.Label)
-// 	}
-
-// 	// 检查是否有已选择的项并展示
-// 	if len(m.selected) > 0 {
-// 		s += "\n已选择的项:\n"
-// 		for _, cmd := range m.selected {
-// 			s += fmt.Sprintf("- %s\n", cmd.Value) // 显示已选择的命令
-// 		}
-// 	}
-
-// 	return s
-// }
-
 // isSubsequence 检查短字符串是否为长字符串的子序列
 func isSubsequence(short, long string) bool {
 	shortLen, longLen := len(short), len(long)
