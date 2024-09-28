@@ -1,7 +1,6 @@
 package tools
 
 import (
-	"dora/cmd"
 	"fmt"
 	"io"
 	"os"
@@ -9,6 +8,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/haokur/dora/cmd"
 )
 
 // 获取未提交的文件列表

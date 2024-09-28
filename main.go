@@ -1,6 +1,6 @@
 package main
 
-import "dora/cli"
+import "github.com/haokur/dora/cli"
 
 func main() {
 	cli.Execute()

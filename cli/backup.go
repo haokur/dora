@@ -1,11 +1,11 @@
 package cli
 
 import (
-	"dora/tools"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/haokur/dora/tools"
 	"github.com/spf13/cobra"
 )
 

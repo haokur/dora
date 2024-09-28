@@ -1,13 +1,14 @@
 package tools
 
 import (
-	"dora/cmd"
 	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/haokur/dora/cmd"
 )
 
 // contains 判断切片中是否包含某个元素

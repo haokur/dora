@@ -1,8 +1,6 @@
-module dora
+module github.com/haokur/dora
 
 go 1.22.5
-
-replace dora => github.com/haokur/dora v0.0.0-20240925173430-585f26c508c7
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0
