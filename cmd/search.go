@@ -2,22 +2,28 @@ package cmd
 
 import (
 	"fmt"
-	"os/exec"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// 单项选择的类型
+type CommandItem struct {
+	Label string
+	Value string
+}
+
 // 搜索模型
 type searchModel struct {
-	commands   []string
+	commands   []CommandItem
 	cursor     int
 	selected   map[int]struct{}
-	filtered   []string
+	filtered   []CommandItem
 	searchTerm string
 }
 
 // 初始化搜索模型
-func initialSearchModel(commands []string) searchModel {
+func initialSearchModel(commands []CommandItem) searchModel {
 	return searchModel{
 		commands: commands,
 		selected: make(map[int]struct{}),
@@ -35,6 +41,7 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "esc":
+			m.selected = map[int]struct{}{}
 			return m, tea.Quit
 		case "up":
 			if m.cursor > 0 {
@@ -73,9 +80,9 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // 渲染界面
 func (m searchModel) View() string {
 	s := "使用上下键选择命令，按空格选择，回车执行，ESC 退出\n"
-	s += fmt.Sprintf("输入关键字进行筛选: %s\n", m.searchTerm)
+	s += fmt.Sprintf("输入关键字进行筛选: %s\n\n", m.searchTerm)
 	for i, command := range m.filtered {
-		cursor := " " // cursor 指示符
+		cursor := " " // 光标指示符
 		if m.cursor == i {
 			cursor = ">" // 当前光标所在位置
 		}
@@ -85,26 +92,20 @@ func (m searchModel) View() string {
 			checked = "√"
 		}
 
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, command)
+		s += fmt.Sprintf("%s [%s] %s（%s）\n", cursor, checked, highlight(command.Value, m.searchTerm), command.Label)
+	}
+
+	// 检查是否有已选择的项
+	if len(m.selected) > 0 && len(m.filtered) < len(m.selected) {
+		s += "\n已选择的项: "
+		for k, v := range m.commands {
+			if _, ok := m.selected[k]; ok {
+				s += v.Value + "；"
+			}
+		}
 	}
 
 	return s
-}
-
-// 执行选中的命令
-func (m searchModel) executeCommands() {
-	for i := range m.selected {
-		cmd := m.filtered[i]
-		fmt.Printf("执行命令: %s\n", cmd)
-
-		// 使用 exec.Command 执行系统命令
-		command := exec.Command("bash", "-c", cmd)
-		output, err := command.CombinedOutput()
-		if err != nil {
-			fmt.Printf("命令执行出错: %v\n", err)
-		}
-		fmt.Println(string(output))
-	}
 }
 
 // isSubsequence 检查短字符串是否为长字符串的子序列
@@ -127,22 +128,47 @@ func isSubsequence(short, long string) bool {
 }
 
 // 根据搜索词过滤命令
-func filterCommands(commands []string, searchTerm string) []string {
+func filterCommands(commands []CommandItem, searchTerm string) []CommandItem {
 	if searchTerm == "" {
 		return commands
 	}
 
-	var filtered []string
+	var filtered []CommandItem
 	for _, cmd := range commands {
-		if isSubsequence(searchTerm, cmd) {
+		if isSubsequence(searchTerm, cmd.Value) {
 			filtered = append(filtered, cmd)
 		}
 	}
 	return filtered
 }
 
+// 高亮匹配字符（按顺序高亮）
+func highlight(command, input string) string {
+	if input == "" {
+		return command // 如果没有输入，直接返回命令
+	}
+
+	var result strings.Builder
+	inputLen := len(input)
+	commandLen := len(command)
+
+	// 记录输入在命令中的位置
+	inputIndex := 0
+	for i := 0; i < commandLen; i++ {
+		if inputIndex < inputLen && command[i] == input[inputIndex] {
+			// result.WriteString(fmt.Sprintf("\033[1;31m%s\033[0m", string(command[i]))) // 高亮当前字符
+			result.WriteString(fmt.Sprintf("\033[1;31;4m%s\033[0m", string(command[i]))) // 高亮并下划线
+			inputIndex++
+		} else {
+			result.WriteString(string(command[i])) // 正常显示
+		}
+	}
+
+	return result.String()
+}
+
 // 导出的方法
-func Search(commands []string) ([]string, error) {
+func Search(commands []CommandItem) ([]string, error) {
 	p := tea.NewProgram(initialSearchModel(commands))
 	result, err := p.Run()
 	if err != nil {
@@ -152,7 +178,7 @@ func Search(commands []string) ([]string, error) {
 	choices := []string{}
 	for k, v := range result.(searchModel).selected {
 		fmt.Println(k, v, result.(searchModel).commands[k])
-		choices = append(choices, result.(searchModel).commands[k])
+		choices = append(choices, result.(searchModel).commands[k].Value)
 	}
 
 	return choices, nil

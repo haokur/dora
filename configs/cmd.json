@@ -1,7 +1,29 @@
 {
     "commands": [
-        "ls -al",
-        "git status",
-        "docker ps"
+        {
+            "value": "ls -al",
+            "label": "文件列表"
+        },
+        {
+            "value": "git status",
+            "type": "copy"
+        },
+        {
+            "value": "git add .",
+            "type": "copy"
+        },
+        {
+            "value": "git commit",
+            "type": "copy"
+        },
+        {
+            "value": "git push",
+            "type": "copy"
+        },
+        {
+            "value": "docker ps",
+            "label": "docker的容器列表",
+            "type": "copy"
+        }
     ]
 }

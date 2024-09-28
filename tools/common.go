@@ -3,6 +3,7 @@ package tools
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -29,6 +30,18 @@ func RunCommand(command string) (string, error) {
 		return "", err
 	}
 	return out.String(), nil
+}
+
+func RunCommandWithLog(command string) error {
+	log.Println("执行命令：", command)
+	cmd := exec.Command("bash", "-c", command) // 使用 bash 运行命令
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // 获取git根目录
