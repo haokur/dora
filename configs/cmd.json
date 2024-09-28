@@ -1,0 +1,7 @@
+{
+    "commands": [
+        "ls -al",
+        "git status",
+        "docker ps"
+    ]
+}
