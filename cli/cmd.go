@@ -44,7 +44,6 @@ var cmdTip = &cobra.Command{
 			fmt.Println("cmd Search error", err)
 		}
 		for _, v := range result {
-			fmt.Println(v)
 			err := tools.RunCommandWithLog(v)
 			if err != nil {
 				fmt.Println("执行失败", v, err)

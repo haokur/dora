@@ -17,32 +17,37 @@ type CommandItem struct {
 type searchModel struct {
 	commands   []CommandItem
 	cursor     int
-	selected   map[int]struct{}
+	selected   []CommandItem // 直接存储 CommandItem 对象
 	filtered   []CommandItem
 	searchTerm string
 }
 
-// 初始化搜索模型
-func initialSearchModel(commands []CommandItem) searchModel {
-	return searchModel{
+// 初始化搜索模型，返回指向 searchModel 的指针
+func initialSearchModel(commands []CommandItem) *searchModel {
+	return &searchModel{
 		commands: commands,
-		selected: make(map[int]struct{}),
+		selected: []CommandItem{},
 		filtered: commands,
 	}
 }
 
-func (m searchModel) Init() tea.Cmd {
+func (m *searchModel) Init() tea.Cmd {
 	return nil
 }
 
 // 更新模型（键盘输入处理）
-func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "esc":
-			m.selected = map[int]struct{}{}
+		// 退出
+		case "ctrl+c":
+			m.selected = []CommandItem{} // 重置已选择项
 			return m, tea.Quit
+		// 取消已选
+		case "esc":
+			m.selected = []CommandItem{} // 重置已选择项
+			return m, nil
 		case "up":
 			if m.cursor > 0 {
 				m.cursor--
@@ -53,10 +58,10 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case " ":
 			// 选择/取消选择命令
-			if _, ok := m.selected[m.cursor]; ok {
-				delete(m.selected, m.cursor)
+			if isSelected(m.selected, m.filtered[m.cursor]) {
+				m.selected = removeSelection(m.selected, m.filtered[m.cursor]) // 取消选择
 			} else {
-				m.selected[m.cursor] = struct{}{}
+				m.selected = append(m.selected, m.filtered[m.cursor]) // 添加选择
 			}
 		case "enter":
 			return m, tea.Quit
@@ -77,36 +82,97 @@ func (m searchModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// 检查命令是否已被选择
+func isSelected(selected []CommandItem, command CommandItem) bool {
+	for _, v := range selected {
+		if v.Value == command.Value {
+			return true
+		}
+	}
+	return false
+}
+
+// 移除选择的命令
+func removeSelection(selected []CommandItem, command CommandItem) []CommandItem {
+	for i, v := range selected {
+		if v.Value == command.Value {
+			return append(selected[:i], selected[i+1:]...) // 取消选择
+		}
+	}
+	return selected
+}
+
 // 渲染界面
-func (m searchModel) View() string {
-	s := "使用上下键选择命令，按空格选择，回车执行，ESC 退出\n"
+// 渲染界面
+func (m *searchModel) View() string {
+	s := "使用上下键选择，空格选择，回车执行，ctrl+c退出，ESC取消已选\n"
 	s += fmt.Sprintf("输入关键字进行筛选: %s\n\n", m.searchTerm)
+
 	for i, command := range m.filtered {
 		cursor := " " // 光标指示符
 		if m.cursor == i {
 			cursor = ">" // 当前光标所在位置
 		}
 
-		checked := " " // 选择状态
-		if _, ok := m.selected[i]; ok {
-			checked = "√"
+		// 选择状态，前面用顺序数字
+		checked := " " // 默认状态
+		if isSelected(m.selected, command) {
+			// 如果已选择，找到该命令在已选择项中的位置并用数字表示
+			for j, selectedCommand := range m.selected {
+				if selectedCommand.Value == command.Value {
+					checked = fmt.Sprintf("%d", j+1) // 用顺序数字表示
+					break
+				}
+			}
 		}
 
-		s += fmt.Sprintf("%s [%s] %s（%s）\n", cursor, checked, highlight(command.Value, m.searchTerm), command.Label)
+		labelStr := ""
+		if command.Label != "" {
+			labelStr = fmt.Sprintf("（%s）", command.Label)
+		}
+
+		s += fmt.Sprintf("%s [%s] %s%s\n", cursor, checked, highlight(command.Value, m.searchTerm), labelStr)
 	}
 
-	// 检查是否有已选择的项
-	if len(m.selected) > 0 && len(m.filtered) < len(m.selected) {
-		s += "\n已选择的项: "
-		for k, v := range m.commands {
-			if _, ok := m.selected[k]; ok {
-				s += v.Value + "；"
-			}
+	// 检查是否有已选择的项并展示
+	if len(m.selected) > 0 {
+		s += "\n已选择的项，将按下面顺序返回:\n"
+		for i, cmd := range m.selected {
+			s += fmt.Sprintf("%d. %s\n", i+1, cmd.Value) // 显示已选择的命令及其顺序
 		}
 	}
 
 	return s
 }
+
+// func (m *searchModel) View() string {
+// 	s := "使用上下键选择命令，按空格选择，回车执行，ESC 退出\n"
+// 	s += fmt.Sprintf("输入关键字进行筛选: %s\n\n", m.searchTerm)
+
+// 	for i, command := range m.filtered {
+// 		cursor := " " // 光标指示符
+// 		if m.cursor == i {
+// 			cursor = ">" // 当前光标所在位置
+// 		}
+
+// 		checked := " " // 选择状态
+// 		if isSelected(m.selected, command) {
+// 			checked = "√"
+// 		}
+
+// 		s += fmt.Sprintf("%s [%s] %s（%s）\n", cursor, checked, highlight(command.Value, m.searchTerm), command.Label)
+// 	}
+
+// 	// 检查是否有已选择的项并展示
+// 	if len(m.selected) > 0 {
+// 		s += "\n已选择的项:\n"
+// 		for _, cmd := range m.selected {
+// 			s += fmt.Sprintf("- %s\n", cmd.Value) // 显示已选择的命令
+// 		}
+// 	}
+
+// 	return s
+// }
 
 // isSubsequence 检查短字符串是否为长字符串的子序列
 func isSubsequence(short, long string) bool {
@@ -156,7 +222,6 @@ func highlight(command, input string) string {
 	inputIndex := 0
 	for i := 0; i < commandLen; i++ {
 		if inputIndex < inputLen && command[i] == input[inputIndex] {
-			// result.WriteString(fmt.Sprintf("\033[1;31m%s\033[0m", string(command[i]))) // 高亮当前字符
 			result.WriteString(fmt.Sprintf("\033[1;31;4m%s\033[0m", string(command[i]))) // 高亮并下划线
 			inputIndex++
 		} else {
@@ -169,16 +234,15 @@ func highlight(command, input string) string {
 
 // 导出的方法
 func Search(commands []CommandItem) ([]string, error) {
-	p := tea.NewProgram(initialSearchModel(commands))
+	p := tea.NewProgram(initialSearchModel(commands)) // 传递指向 searchModel 的指针
 	result, err := p.Run()
 	if err != nil {
 		return nil, err
 	}
 
 	choices := []string{}
-	for k, v := range result.(searchModel).selected {
-		fmt.Println(k, v, result.(searchModel).commands[k])
-		choices = append(choices, result.(searchModel).commands[k].Value)
+	for _, cmd := range result.(*searchModel).selected {
+		choices = append(choices, cmd.Value)
 	}
 
 	return choices, nil
