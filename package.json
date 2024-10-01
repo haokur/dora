@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "air",
+    "test": "echo hello",
     "build": "go build -o dist/dora",
     "build:amd64": "GOOS=linux GOARCH=amd64 go build -o dist/dora",
     "build:all": "xgo --targets=linux/amd64,windows/386,macos/arm64 ."

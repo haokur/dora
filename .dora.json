@@ -1,0 +1,18 @@
+{
+	"watchers": [
+		{
+			"include": [
+				"/Users/haokur/code/Github/dora"
+			],
+			"exclude": [
+				"/Users/haokur/code/Github/dora/node_modules",
+				"/Users/haokur/code/Github/dora/dist",
+				"/Users/haokur/code/Github/dora/.git"
+			],
+			"cmds": [
+				"cd /Users/haokur/code/Github/dora",
+				"go run main.go -h"
+			]
+		}
+	]
+}

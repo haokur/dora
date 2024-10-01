@@ -21,7 +21,7 @@ type cmdJsonType struct {
 
 var cmdTip = &cobra.Command{
 	Use:   "cmd",
-	Short: "命令行提示,自动输入",
+	Short: "列举dora配置文件中的所有命令，可筛选多选命令依次执行",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		// jsonFilePath := "./configs/cmd.json"
 		// userHomeDir, _ := os.UserHomeDir()

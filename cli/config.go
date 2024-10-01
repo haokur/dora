@@ -16,7 +16,7 @@ var infoFlag bool
 
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "管理配置文件",
+	Short: "管理配置文件，位于用户目录/dora/.config.json",
 	Run: func(cmd *cobra.Command, args []string) {
 		// 如果是查看配置文件
 		if infoFlag {

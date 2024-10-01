@@ -14,7 +14,7 @@ var isBackup bool
 
 var backupCmd = &cobra.Command{
 	Use:   "backup",
-	Short: "备份git未提交的代码",
+	Short: "备份git未提交的代码，备份目录/Users/dora/backup/项目名_备份日期",
 	Run: func(cmd *cobra.Command, args []string) {
 		userHomeDir, _ := os.UserHomeDir()
 		currentWorkGitDir, err := tools.GetGitRootDir()
@@ -23,7 +23,7 @@ var backupCmd = &cobra.Command{
 			return
 		}
 		fileName := filepath.Base(currentWorkGitDir)
-		gitBackupDir := fmt.Sprintf("%s/%s/%s", userHomeDir, "dora_data", fileName)
+		gitBackupDir := fmt.Sprintf("%s/%s/%s", userHomeDir, "dora/backup", fileName)
 		if isBackup {
 			if err != nil {
 				return

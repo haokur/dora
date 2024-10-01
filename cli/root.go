@@ -75,7 +75,7 @@ func completer(t prompt.Document) []prompt.Suggest {
 var rootCmd = &cobra.Command{
 	Use:   "dora",
 	Short: "效率自动化工具箱",
-	Long:  `基于Golang+Cobra开发的效率自动化工具箱`,
+	Long:  "基于Golang+Cobra开发的效率自动化工具箱\n不带参数进入带提示的交互页面",
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := tools.ReadDoraJsonConfig(&jsonConfig); err != nil {
 			fmt.Println("ReadJsonError", err)
