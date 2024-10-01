@@ -15,7 +15,7 @@ var isCopyFlag bool
 
 var ipCmd = &cobra.Command{
 	Use:   "ip",
-	Short: "ip",
+	Short: "获取本机当前IP地址，仅1个IP时回车复制，多个选择复制",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		ipv4, ipv6 := tools.GetIpAddress()
 		ipResult := []string{}

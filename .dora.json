@@ -11,7 +11,7 @@
 			],
 			"cmds": [
 				"cd /Users/haokur/code/Github/dora",
-				"go run main.go ip"
+				"go run main.go -h"
 			]
 		}
 	]

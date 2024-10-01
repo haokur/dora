@@ -59,7 +59,7 @@ func noteCompleter(t prompt.Document) []prompt.Suggest {
 // 备忘笔记本，提供查询列表，可以搜索并复制内容
 var noteCmd = &cobra.Command{
 	Use:   "note",
-	Short: "note",
+	Short: "可搜索复制的备忘命令列表",
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := tools.ReadDoraJsonConfig(&noteJsonConfig); err != nil {
 			fmt.Println("ReadJsonError", err)
