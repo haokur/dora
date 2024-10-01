@@ -25,7 +25,7 @@ func contains[T comparable](slice []T, item T) bool {
 func getPidListByRunLsof(lsofCommand *exec.Cmd) []map[string]string {
 	lsofOutput, err := lsofCommand.Output()
 	if err != nil {
-		fmt.Println("[error]", lsofCommand, "Error executing lsof command: ", err)
+		fmt.Println("[error]", lsofCommand, "Error executing lsof command,maybe cannot found port or process: ", err)
 		return []map[string]string{}
 	}
 
@@ -151,6 +151,8 @@ func KillProcess(args *[]string) {
 			continue
 		}
 		selectPidList := selectPid2Kill(&pidList, processItem)
-		killProcessByPid(selectPidList, processItem)
+		if len(selectPidList) > 0 {
+			killProcessByPid(selectPidList, processItem)
+		}
 	}
 }

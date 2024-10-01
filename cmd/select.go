@@ -80,9 +80,10 @@ func (m selectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.allSelected = true
 			}
 
-		// 退出
+		// 退出,清空已选择
 		case "ctrl+c", "q":
 			m.isCanceled = true
+			m.checked = make(map[int]bool)
 			return m, tea.Quit
 		}
 	}

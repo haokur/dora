@@ -78,7 +78,7 @@ func RunCommandWithLog(command string) error {
 	log.Println("执行命令：", command)
 	// 如果是要调用vi的，则需要额外处理，git commit，vi
 	if isCallTerminalVim(command) {
-
+		callTerminalVim(command)
 		return nil
 	}
 	cmd := exec.Command("bash", "-c", command) // 使用 bash 运行命令
