@@ -11,7 +11,7 @@ import (
 
 var backupCmd = &cobra.Command{
 	Use:   "backup",
-	Short: "backup unCommit files",
+	Short: "备份git未提交的代码",
 	Run: func(cmd *cobra.Command, args []string) {
 		userHomeDir, _ := os.UserHomeDir()
 		currentWorkGitDir, err := tools.GetGitRootDir()
