@@ -11,6 +11,9 @@ import (
 )
 
 func executor(t string) {
+	if t == "dora" {
+		return
+	}
 	if t == "exit" {
 		fmt.Println("再见！")
 		os.Exit(0)

@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	terminal "golang.org/x/term"
 )
 
 // 获取用户的路径
@@ -17,6 +19,46 @@ func GetUserHomePath() string {
 		return "~"
 	}
 	return dirPath
+}
+
+// 是否是要调用终端的vim
+func isCallTerminalVim(command string) bool {
+	parts := strings.Fields(command)
+	isGitCommit := false
+	isVim := false
+	if len(parts) > 1 {
+		isGitCommit = parts[0] == "git" && parts[1] == "commit"
+	} else if len(parts) > 0 {
+		isVim = strings.HasPrefix(command, "vi")
+	}
+	return isGitCommit || isVim
+}
+
+// 调用系统的vim
+func callTerminalVim(command string) {
+	// 获取当前终端
+	fd := int(os.Stdin.Fd())
+
+	// 设置终端为原始模式
+	oldState, err := terminal.MakeRaw(fd)
+	if err != nil {
+		panic(err)
+	}
+	defer terminal.Restore(fd, oldState)
+
+	// 调用 Vim
+	parts := strings.Fields(command) // 使用 Fields 分割以处理空格
+	process := parts[0]
+	args := parts[1:]
+	cmd := exec.Command(process, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 // 执行长命令
@@ -34,6 +76,11 @@ func RunCommand(command string) (string, error) {
 
 func RunCommandWithLog(command string) error {
 	log.Println("执行命令：", command)
+	// 如果是要调用vi的，则需要额外处理，git commit，vi
+	if isCallTerminalVim(command) {
+
+		return nil
+	}
 	cmd := exec.Command("bash", "-c", command) // 使用 bash 运行命令
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
