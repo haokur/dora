@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/atotto/clipboard"
 	terminal "golang.org/x/term"
 )
 
@@ -19,6 +21,12 @@ func GetUserHomePath() string {
 		return "~"
 	}
 	return dirPath
+}
+
+// 获取工作目录
+func GetWorkDir() string {
+	workingDir, _ := os.Getwd()
+	return workingDir
 }
 
 // 是否是要调用终端的vim
@@ -81,6 +89,21 @@ func RunCommandWithLog(command string) error {
 		callTerminalVim(command)
 		return nil
 	}
+	// 如果是调用cd命令，使用Chdir进入目录
+	if strings.HasPrefix(command, "cd") {
+		parts := strings.Fields(command)
+		if len(parts) > 1 {
+			targetDir := parts[1]
+			if strings.Contains(targetDir, "~") {
+				homeDir := GetUserHomePath()
+				targetDir = strings.ReplaceAll(targetDir, "~", homeDir)
+			}
+			if err := os.Chdir(targetDir); err != nil {
+				fmt.Printf("切换到目录 %s 失败: %v\n", targetDir, err)
+			}
+		}
+		return nil
+	}
 	cmd := exec.Command("bash", "-c", command) // 使用 bash 运行命令
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -136,4 +159,47 @@ func ReadFilesRecursively(dirPath string) ([]string, error) {
 	result := []string{}
 	err := readDirRecursively(dirPath, &result, dirPath)
 	return result, err
+}
+
+// 获取当前网络IP
+func GetIpAddress() ([]string, []string) {
+	ipv4 := []string{}
+	ipv6 := []string{}
+	// 获取所有网络接口
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		fmt.Println("获取网络接口失败:", err)
+		return ipv4, ipv6
+	}
+
+	for _, iface := range interfaces {
+		// 获取每个接口的地址
+		addresses, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+
+		for _, address := range addresses {
+			// 检查地址类型，过滤掉非 IP 地址
+			if ipNet, ok := address.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
+				ipAddr := ipNet.IP.String()
+				// 输出非环回地址
+				if ipNet.IP.To4() != nil {
+					ipv4 = append(ipv4, ipAddr)
+				} else {
+					ipv6 = append(ipv6, ipAddr)
+				}
+			}
+		}
+	}
+	return ipv4, ipv6
+}
+
+// 复制文本到剪切板
+func CopyText2ClipBoard(text string) error {
+	err := clipboard.WriteAll(text)
+	if err != nil {
+		return err
+	}
+	return nil
 }

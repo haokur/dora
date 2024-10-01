@@ -10,6 +10,28 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func getPrefix() string {
+	workDir := tools.GetWorkDir()
+	homeDir := tools.GetUserHomePath()
+	shortWorkDir := strings.ReplaceAll(workDir, homeDir, "~")
+	prefix := fmt.Sprintf("⚡%s >>> ", shortWorkDir)
+	return prefix
+}
+
+func createPrompt() *prompt.Prompt {
+	prefix := getPrefix()
+	return prompt.New(
+		executor,
+		completer,
+		prompt.OptionPrefix(prefix),
+		prompt.OptionTitle("dora命令行工具"),
+		prompt.OptionPrefixTextColor(prompt.DarkBlue),
+		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
+		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
+		prompt.OptionSuggestionBGColor(prompt.DarkGray),
+	)
+}
+
 func executor(t string) {
 	if t == "dora" {
 		return
@@ -19,7 +41,11 @@ func executor(t string) {
 		os.Exit(0)
 	}
 	if t != "" {
-		tools.RunCommandWithLog(t)
+		err := tools.RunCommandWithLog(t)
+		if err == nil && strings.HasPrefix(t, "cd") {
+			p := createPrompt()
+			p.Run()
+		}
 	}
 }
 
@@ -52,7 +78,7 @@ func completer(t prompt.Document) []prompt.Suggest {
 	// 如果有空格，比如git push，则能匹配到 origin main
 	// 如果t.Text为git push origin，则能匹配到main
 	promptConfig := jsonConfig.Prompts
-	searchKey := t.Text
+	searchKey := strings.TrimLeft(t.Text, " ")
 	suggestions := make([]prompt.Suggest, 0, len(promptConfig))
 	matches := tools.FindMatches(promptConfig, "Cmd", searchKey)
 
@@ -83,17 +109,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		// 缺省不带参数，则进入dora环境，使用go-prompt进行提示
-		p := prompt.New(
-			executor,
-			completer,
-			prompt.OptionPrefix("⚡dora >>> "),
-			prompt.OptionTitle("dora命令行工具"),
-			// prompt.OptionHistory([]string{"SELECT * FROM users;"}), // 设置初始化历史记录可上下翻动
-			prompt.OptionPrefixTextColor(prompt.DarkBlue),
-			prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
-			prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
-			prompt.OptionSuggestionBGColor(prompt.DarkGray),
-		)
+		p := createPrompt()
 		p.Run()
 	},
 }
