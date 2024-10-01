@@ -203,3 +203,16 @@ func CopyText2ClipBoard(text string) error {
 	}
 	return nil
 }
+
+// 查找最后一个空格前面的内容
+// 比如"git push o"，则返回 "git push"
+func GetBeforeLastSpace(input string) string {
+	// 查找最后一个空格的位置
+	lastSpaceIndex := strings.LastIndex(input, " ")
+	if lastSpaceIndex == -1 {
+		// 如果没有空格，返回原字符串
+		return input
+	}
+	// 返回空格前的部分
+	return input[:lastSpaceIndex]
+}

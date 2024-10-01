@@ -57,7 +57,5 @@ func init() {
 	ipCmd.Flags().BoolVarP(&ipv6Flag, "ipv6", "6", false, "是否需要输出ipv6 IP")
 	ipCmd.Flags().BoolVarP(&isCopyFlag, "copy", "c", true, "是否需要复制操作")
 
-	fmt.Println(ipv4Flag)
-
 	rootCmd.AddCommand(ipCmd)
 }

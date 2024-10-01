@@ -49,17 +49,6 @@ func executor(t string) {
 	}
 }
 
-func getBeforeLastSpace(input string) string {
-	// 查找最后一个空格的位置
-	lastSpaceIndex := strings.LastIndex(input, " ")
-	if lastSpaceIndex == -1 {
-		// 如果没有空格，返回原字符串
-		return input
-	}
-	// 返回空格前的部分
-	return input[:lastSpaceIndex]
-}
-
 type promptItem struct {
 	Cmd   string `json:"cmd"`
 	Label string `json:"label"`
@@ -86,7 +75,7 @@ func completer(t prompt.Document) []prompt.Suggest {
 		command := item.Cmd
 		if strings.Contains(searchKey, " ") {
 			// 替换最后一个空格前面所有内容
-			beforeCmd := getBeforeLastSpace(searchKey) + " "
+			beforeCmd := tools.GetBeforeLastSpace(searchKey) + " "
 			command = strings.ReplaceAll(command, beforeCmd, "")
 		}
 		suggestions = append(suggestions, prompt.Suggest{
@@ -111,6 +100,7 @@ var rootCmd = &cobra.Command{
 		// 缺省不带参数，则进入dora环境，使用go-prompt进行提示
 		p := createPrompt()
 		p.Run()
+
 	},
 }
 
