@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/haokur/dora/cmd"
 	"github.com/haokur/dora/tools"
@@ -25,11 +24,10 @@ var cmdTip = &cobra.Command{
 	Short: "命令行提示,自动输入",
 	Run: func(cobraCmd *cobra.Command, args []string) {
 		// jsonFilePath := "./configs/cmd.json"
-		userHomeDir, _ := os.UserHomeDir()
-		jsonFilePath := filepath.Join(userHomeDir, "dora/.config.json")
-
+		// userHomeDir, _ := os.UserHomeDir()
+		// jsonFilePath := filepath.Join(userHomeDir, "dora/.config.json")
 		var jsonData cmdJsonType
-		if err := tools.ReadJsonFile(jsonFilePath, &jsonData); err != nil {
+		if err := tools.ReadDoraJsonConfig(&jsonData); err != nil {
 			fmt.Println("ReadJsonError", err)
 			os.Exit(1)
 		}

@@ -2,6 +2,7 @@ package tools
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -24,12 +25,13 @@ func IsSubsequence(short, long string) bool {
 	return false // 没有完全匹配
 }
 
-// 获取对像数组里按某个key，以IsSubsequence来查找匹配的值
-func FindMatches(arr []map[string]interface{}, fieldKey string, searchKey string) []map[string]interface{} {
-	result := []map[string]interface{}{}
+func FindMatches[T any](arr []T, fieldKey string, searchKey string) []T {
+	result := []T{}
 	for _, item := range arr {
-		if value, ok := item[fieldKey].(string); ok {
-			if IsSubsequence(searchKey, value) {
+		// 使用反射来获取字段值
+		val := reflect.ValueOf(item).FieldByName(fieldKey)
+		if val.IsValid() && val.Kind() == reflect.String {
+			if IsSubsequence(searchKey, val.String()) {
 				result = append(result, item)
 			}
 		}

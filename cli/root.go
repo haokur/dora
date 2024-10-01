@@ -31,24 +31,30 @@ func getBeforeLastSpace(input string) string {
 	return input[:lastSpaceIndex]
 }
 
+type promptItem struct {
+	Cmd   string `json:"cmd"`
+	Label string `json:"label"`
+}
+
+type promptJsonType struct {
+	Prompts []promptItem `json:"prompts"`
+}
+
+var jsonConfig promptJsonType
+
 func completer(t prompt.Document) []prompt.Suggest {
-	configs := []map[string]interface{}{
-		{"cmd": "git status", "label": "查看git状态"},
-		{"cmd": "git add .", "label": "添加所有文件改变"},
-		{"cmd": "git commit -m \"\"", "label": "增加git描述"},
-		{"cmd": "git push origin main", "label": "推送提交"},
-		{"cmd": "exit", "label": "退出程序"},
-	}
 	// t.Text中没有空格，则按整条命令来提示
 	// t.Text中有空格，则需要将命令按t.Text来匹配再切割，余下的命令字符串
 	// 比如无空格，输入gip，能匹配到建议：git push origin main
 	// 如果有空格，比如git push，则能匹配到 origin main
 	// 如果t.Text为git push origin，则能匹配到main
+	promptConfig := jsonConfig.Prompts
 	searchKey := t.Text
-	suggestions := make([]prompt.Suggest, 0, len(configs))
-	matches := tools.FindMatches(configs, "cmd", searchKey)
+	suggestions := make([]prompt.Suggest, 0, len(promptConfig))
+	matches := tools.FindMatches(promptConfig, "Cmd", searchKey)
+
 	for _, item := range matches {
-		command := item["cmd"].(string)
+		command := item.Cmd
 		if strings.Contains(searchKey, " ") {
 			// 替换最后一个空格前面所有内容
 			beforeCmd := getBeforeLastSpace(searchKey) + " "
@@ -56,7 +62,7 @@ func completer(t prompt.Document) []prompt.Suggest {
 		}
 		suggestions = append(suggestions, prompt.Suggest{
 			Text:        command,
-			Description: item["label"].(string),
+			Description: item.Label,
 		})
 	}
 
@@ -68,6 +74,11 @@ var rootCmd = &cobra.Command{
 	Short: "效率自动化工具箱",
 	Long:  `基于Golang+Cobra开发的效率自动化工具箱`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if err := tools.ReadDoraJsonConfig(&jsonConfig); err != nil {
+			fmt.Println("ReadJsonError", err)
+			os.Exit(1)
+		}
+
 		// 缺省不带参数，则进入dora环境，使用go-prompt进行提示
 		p := prompt.New(
 			executor,
