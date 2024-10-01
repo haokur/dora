@@ -53,6 +53,7 @@ func (m radioModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// 退出
 		case "ctrl+c", "q":
 			m.isCanceled = true
+			m.choices = []string{}
 			return m, tea.Quit
 		}
 

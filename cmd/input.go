@@ -53,6 +53,7 @@ func (m inputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// 退出
 		case "ctrl+c":
 			m.isCanceled = true
+			m.value = ""
 			return m, tea.Quit
 
 		default:

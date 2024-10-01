@@ -71,6 +71,7 @@ func (m confirmModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// 退出
 		case "ctrl+c", "q":
 			m.isCanceled = true
+			m.answer = ""
 			return m, tea.Quit
 
 		default:
