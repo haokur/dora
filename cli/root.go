@@ -50,8 +50,9 @@ func executor(t string) {
 }
 
 type promptItem struct {
-	Cmd   string `json:"cmd"`
-	Label string `json:"label"`
+	Cmd      string       `json:"cmd"`
+	Label    string       `json:"label"`
+	Children []promptItem `json:"children"`
 }
 
 type promptJsonType struct {
@@ -59,6 +60,34 @@ type promptJsonType struct {
 }
 
 var jsonConfig promptJsonType
+
+func getSuggestions(input string, commands []promptItem) []prompt.Suggest {
+	parts := strings.Fields(input)
+	if len(parts) == 0 {
+		return nil
+	}
+
+	currentCommands := commands
+	for _, part := range parts {
+		found := false
+		for _, cmd := range currentCommands {
+			if cmd.Cmd == part {
+				currentCommands = cmd.Children
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil
+		}
+	}
+
+	var suggestions []prompt.Suggest
+	for _, cmd := range currentCommands {
+		suggestions = append(suggestions, prompt.Suggest{Text: cmd.Cmd, Description: cmd.Label})
+	}
+	return suggestions
+}
 
 func completer(t prompt.Document) []prompt.Suggest {
 	// t.Text中没有空格，则按整条命令来提示
@@ -75,17 +104,34 @@ func completer(t prompt.Document) []prompt.Suggest {
 	}
 	matches := tools.FindMatches(promptConfig, matchFieldKey, searchKey)
 
+	// beforeCmd为以空格切割的命令
+	beforeCmd := tools.GetBeforeLastSpace(searchKey)
+	searchKeyHasSpace := strings.Contains(searchKey, " ")
+
 	for _, item := range matches {
 		command := item.Cmd
-		if strings.Contains(searchKey, " ") {
+		if searchKeyHasSpace {
 			// 替换最后一个空格前面所有内容
-			beforeCmd := tools.GetBeforeLastSpace(searchKey) + " "
-			command = strings.ReplaceAll(command, beforeCmd, "")
+			command = strings.ReplaceAll(command, beforeCmd+" ", "")
 		}
 		suggestions = append(suggestions, prompt.Suggest{
 			Text:        command,
 			Description: item.Label,
 		})
+	}
+
+	// 使用beforeCmd，先全等比较，找到对应下的children
+	// 再使用空格切开，逐级拼接查找，找到对应下的children
+	if searchKeyHasSpace {
+		// 空格前的筛选接下来的列表，空格后的在筛下来的列表里继续筛
+		subSuggestList := getSuggestions(beforeCmd, promptConfig)
+		afterLastSpaceCmd := strings.ReplaceAll(searchKey, beforeCmd+" ", "")
+		afterLastSpaceCmd = strings.Trim(afterLastSpaceCmd, "")
+		filterChildrenCmds := subSuggestList
+		if afterLastSpaceCmd != "" {
+			filterChildrenCmds = tools.FindMatches(subSuggestList, "Text", afterLastSpaceCmd)
+		}
+		suggestions = append(suggestions, filterChildrenCmds...)
 	}
 
 	return suggestions

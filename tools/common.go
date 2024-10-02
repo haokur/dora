@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -29,6 +30,16 @@ func GetUserHomePath() string {
 func GetWorkDir() string {
 	workingDir, _ := os.Getwd()
 	return workingDir
+}
+
+// 安全创建文件，避免文件夹不存在的情况
+func SafeWriteFile(filePath string, content []byte) {
+	dirPath := path.Dir(filePath)
+	if err := os.MkdirAll(dirPath, 0755); err != nil {
+		fmt.Println("Error creating directory:", err)
+		return
+	}
+	os.WriteFile(filePath, content, 0644)
 }
 
 // 是否是要调用终端的vim
