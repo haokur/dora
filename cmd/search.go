@@ -11,6 +11,7 @@ import (
 type CommandItem struct {
 	Label string
 	Value string
+	Desc  string
 }
 
 // 搜索模型
@@ -131,7 +132,12 @@ func (m *searchModel) View() string {
 			labelStr = fmt.Sprintf("（%s）", command.Label)
 		}
 
-		s += fmt.Sprintf("%s [%s] %s%s\n", cursor, checked, highlight(command.Value, m.searchTerm), labelStr)
+		descStr := ""
+		if command.Label != "" {
+			descStr = darkText(fmt.Sprintf("[%s]", command.Desc))
+		}
+
+		s += fmt.Sprintf("%s [%s] %s%s%s\n", cursor, checked, highlight(command.Value, m.searchTerm), labelStr, descStr)
 	}
 
 	// 检查是否有已选择的项并展示
@@ -139,6 +145,9 @@ func (m *searchModel) View() string {
 		s += "\n已选择的项，将按下面顺序返回:\n"
 		for i, cmd := range m.selected {
 			s += fmt.Sprintf("%d. %s\n", i+1, cmd.Value) // 显示已选择的命令及其顺序
+			if cmd.Desc != "" {
+				s += darkText("  - " + strings.ReplaceAll(cmd.Desc, "，", "\n  - "))
+			}
 		}
 	}
 
@@ -203,7 +212,11 @@ func highlight(command, input string) string {
 	return result.String()
 }
 
-// 导出的方法
+func darkText(text string) string {
+	return fmt.Sprintf("\033[90m%s\033[0m", text)
+}
+
+// 带搜索的多选
 func Search(commands []CommandItem) ([]string, error) {
 	p := tea.NewProgram(initialSearchModel(commands)) // 传递指向 searchModel 的指针
 	result, err := p.Run()
