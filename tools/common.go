@@ -237,6 +237,16 @@ func ContainsChineseWords(text string) bool {
 	return reg.MatchString(text)
 }
 
+// 检查切片中是否包含指定的元素
+func SliceContains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
 // 使用对应系统的编辑器，编辑文件
 func EditFileWithSystemEditor(filePath string) {
 	editorCmd := "code"

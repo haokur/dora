@@ -102,23 +102,10 @@ func completer(t prompt.Document) []prompt.Suggest {
 	if tools.ContainsChineseWords(searchKey) {
 		matchFieldKey = "Label"
 	}
-	matches := tools.FindMatches(promptConfig, matchFieldKey, searchKey)
 
 	// beforeCmd为以空格切割的命令
 	beforeCmd := tools.GetBeforeLastSpace(searchKey)
 	searchKeyHasSpace := strings.Contains(searchKey, " ")
-
-	for _, item := range matches {
-		command := item.Cmd
-		if searchKeyHasSpace {
-			// 替换最后一个空格前面所有内容
-			command = strings.ReplaceAll(command, beforeCmd+" ", "")
-		}
-		suggestions = append(suggestions, prompt.Suggest{
-			Text:        command,
-			Description: item.Label,
-		})
-	}
 
 	// 使用beforeCmd，先全等比较，找到对应下的children
 	// 再使用空格切开，逐级拼接查找，找到对应下的children
@@ -132,6 +119,19 @@ func completer(t prompt.Document) []prompt.Suggest {
 			filterChildrenCmds = tools.FindMatches(subSuggestList, "Text", afterLastSpaceCmd)
 		}
 		suggestions = append(suggestions, filterChildrenCmds...)
+	}
+
+	matches := tools.FindMatches(promptConfig, matchFieldKey, searchKey)
+	for _, item := range matches {
+		command := item.Cmd
+		if searchKeyHasSpace {
+			// 替换最后一个空格前面所有内容
+			command = strings.ReplaceAll(command, beforeCmd+" ", "")
+		}
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        command,
+			Description: item.Label,
+		})
 	}
 
 	return suggestions
