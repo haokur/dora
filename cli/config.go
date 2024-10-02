@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -20,15 +19,16 @@ var configCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// 如果是查看配置文件
 		if infoFlag {
-			tools.RunCommandWithLog(fmt.Sprintf("cat %s", configPath))
+			tools.PreviewFileWithSystemEditor(configPath)
 			return
 		}
 
 		// 更新配置
 		if updateFlag {
-			tools.RunCommandWithLog(fmt.Sprintf("code %s", configPath))
+			tools.EditFileWithSystemEditor(configPath)
 			return
 		}
+		cmd.Help()
 	},
 }
 

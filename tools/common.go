@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/atotto/clipboard"
@@ -223,4 +224,18 @@ func ContainsChineseWords(text string) bool {
 	// 定义一个匹配中文字符的正则表达式
 	reg := regexp.MustCompile("[\u4e00-\u9fa5]")
 	return reg.MatchString(text)
+}
+
+// 使用对应系统的编辑器，编辑文件
+func EditFileWithSystemEditor(filePath string) {
+	editorCmd := "code"
+	if runtime.GOOS == "linux" {
+		editorCmd = "vi"
+	}
+	RunCommandWithLog(fmt.Sprintf("%s %s", editorCmd, filePath))
+}
+
+// TODO：使用对应系统编辑器预览文件
+func PreviewFileWithSystemEditor(filePath string) {
+	RunCommandWithLog(fmt.Sprintf("cat %s", filePath))
 }
