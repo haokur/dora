@@ -32,6 +32,13 @@ func GetWorkDir() string {
 	return workingDir
 }
 
+// 获取配置文件路径
+func GetDoraConfigPath() string {
+	userHomeDir, _ := os.UserHomeDir()
+	configPath := filepath.Join(userHomeDir, "dora/.config.json")
+	return configPath
+}
+
 // 安全创建文件，避免文件夹不存在的情况
 func SafeWriteFile(filePath string, content []byte) {
 	dirPath := path.Dir(filePath)
