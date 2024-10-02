@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/atotto/clipboard"
@@ -215,4 +216,11 @@ func GetBeforeLastSpace(input string) string {
 	}
 	// 返回空格前的部分
 	return input[:lastSpaceIndex]
+}
+
+// 查询文本中是否包含中文
+func ContainsChineseWords(text string) bool {
+	// 定义一个匹配中文字符的正则表达式
+	reg := regexp.MustCompile("[\u4e00-\u9fa5]")
+	return reg.MatchString(text)
 }

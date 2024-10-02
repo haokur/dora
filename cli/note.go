@@ -38,7 +38,11 @@ func noteCompleter(t prompt.Document) []prompt.Suggest {
 	noteConfig := noteJsonConfig.Notes
 	searchKey := strings.TrimLeft(t.Text, " ")
 	suggestions := make([]prompt.Suggest, 0, len(noteConfig))
-	matches := tools.FindMatches(noteConfig, "Value", searchKey)
+	matchFieldKey := "Value"
+	if tools.ContainsChineseWords(searchKey) {
+		matchFieldKey = "Label"
+	}
+	matches := tools.FindMatches(noteConfig, matchFieldKey, searchKey)
 
 	for _, item := range matches {
 		command := item.Value

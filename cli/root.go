@@ -69,7 +69,11 @@ func completer(t prompt.Document) []prompt.Suggest {
 	promptConfig := jsonConfig.Prompts
 	searchKey := strings.TrimLeft(t.Text, " ")
 	suggestions := make([]prompt.Suggest, 0, len(promptConfig))
-	matches := tools.FindMatches(promptConfig, "Cmd", searchKey)
+	matchFieldKey := "Cmd"
+	if tools.ContainsChineseWords(searchKey) {
+		matchFieldKey = "Label"
+	}
+	matches := tools.FindMatches(promptConfig, matchFieldKey, searchKey)
 
 	for _, item := range matches {
 		command := item.Cmd
