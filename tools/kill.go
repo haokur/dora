@@ -65,6 +65,21 @@ func getPidListByPsAux(processName string) []map[string]string {
 	processList := []map[string]string{}
 	switch runtime.GOOS {
 	case "windows":
+		// TODO:待验证
+		output, err := RunCommand("netstat -ano")
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		for _, v := range strings.Split(string(output), "\n") {
+			if v != "" {
+				processList = append(processList, map[string]string{
+					"PID":     v,
+					"COMMAND": processName,
+					"NAME":    processName,
+				})
+			}
+		}
 	case "darwin", "linux":
 		cmd := exec.Command("bash", "-c", fmt.Sprintf("ps aux | grep %s | grep -v grep | awk '{print $2}'", processName))
 
