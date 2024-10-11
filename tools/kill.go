@@ -165,6 +165,8 @@ func killProcessByPid(pidArr []int, processName string) {
 // 传入端口和应用程序的字符串数组
 // 如：KillProcess(&[]string{"5173", "obsidian"})
 func KillProcess(args *[]string, silence bool) {
+	// 当前运行的命令
+	currentRunCommand := "kill " + strings.Join(*args, " ")
 	for _, processItem := range *args {
 		pidInfoList := []ProcessItem{}
 		port, err := strconv.Atoi(processItem)
@@ -175,10 +177,11 @@ func KillProcess(args *[]string, silence bool) {
 			seen := make(map[string]bool)
 			var uniqueProcesses []ProcessItem
 			for _, process := range auxPidList {
-				if !seen[string(process.Pid)] {
-					uniqueProcesses = append(uniqueProcesses, process)
-					seen[string(process.Pid)] = true
+				if strings.Contains(process.Command, currentRunCommand) || seen[string(process.Pid)] {
+					continue
 				}
+				uniqueProcesses = append(uniqueProcesses, process)
+				seen[string(process.Pid)] = true
 			}
 			pidInfoList = append(pidInfoList, uniqueProcesses...)
 		} else {
