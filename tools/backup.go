@@ -83,24 +83,26 @@ func backupUncommittedFiles(sourceDir string, backupDir string) error {
 }
 
 // 将当前sourceDir目录下的更改的文件，以时间戳为文件夹名备份到targetDir
-func BackupUnCommitFiles(sourceDir string, targetDir string) {
+func BackupUnCommitFiles(sourceDir string, targetDir string) (string, error) {
 	// 获取当前时间戳
 	timestamp := time.Now().Format("2006_01_02_150405")
 
 	// 创建备份文件夹
-	backupDir := filepath.Join(targetDir, timestamp)
+	// backupDir := filepath.Join(targetDir, timestamp)
+	backupDir := targetDir + "_" + timestamp
 	if err := os.MkdirAll(backupDir, os.ModePerm); err != nil {
 		fmt.Println("Error creating backup directory:", err)
-		return
+		return "", err
 	}
 
 	// 备份未提交的文件
 	if err := backupUncommittedFiles(sourceDir, backupDir); err != nil {
 		fmt.Println("Error backing up files:", err)
-		return
+		return "", err
 	}
 
-	fmt.Println("Backup completed successfully.")
+	fmt.Printf("Backup completed successfully.\nBackup dir is %s\n", backupDir)
+	return backupDir, nil
 }
 
 // 将当前backupDir以时间戳为文件夹下所有文件还原到git项目目录下
@@ -131,6 +133,9 @@ func RecoverBackupFiles(backupDir string, gitProjectDir string) {
 	userSelectBackupDir, err := cmd.Radio("请选择一个文件夹进行还原", &dirs)
 	if err != nil {
 		fmt.Println("用户选择目录出错", err)
+	}
+	if userSelectBackupDir == "" {
+		return
 	}
 	backupDir2Recover := filepath.Join(backupDir, userSelectBackupDir)
 	allFilePaths, err := ReadFilesRecursively(backupDir2Recover)

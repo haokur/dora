@@ -267,3 +267,28 @@ func EditFileWithSystemEditor(filePath string) {
 func PreviewFileWithSystemEditor(filePath string) {
 	RunCommandWithLog(fmt.Sprintf("cat %s", filePath))
 }
+
+// OpenFolderAndSelectFile 打开文件夹并高亮显示指定文件
+func OpenFolderAndSelectFile(path string) error {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+
+	switch runtime.GOOS {
+	case "windows":
+		// Windows: 使用 `explorer` 打开并选择文件
+		cmd := exec.Command("explorer", "/select,", absPath)
+		return cmd.Run()
+	case "darwin":
+		// macOS: 使用 `open` 命令打开文件夹并高亮文件
+		cmd := exec.Command("open", "-R", absPath)
+		return cmd.Run()
+	case "linux":
+		// 对于大部分Linux发行版，可以使用xdg-open打开文件夹，但没有选择文件的功能
+		cmd := exec.Command("xdg-open", filepath.Dir(absPath))
+		return cmd.Run()
+	default:
+		return fmt.Errorf("不支持的操作系统: %s", runtime.GOOS)
+	}
+}
