@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -126,9 +125,11 @@ func RecoverBackupFiles(backupDir string, gitProjectDir string) {
 	}
 
 	// 按文件夹名称倒序排序
-	sort.Slice(dirs, func(i, j int) bool {
-		return dirs[i] > dirs[j] // 倒序排列
-	})
+	// sort.Slice(dirs, func(i, j int) bool {
+	// 	return dirs[i] > dirs[j] // 倒序排列
+	// })
+	// 按文件中的时间戳倒序排序
+	dirs = SortSliceByInlineDate(dirs, "2006_01_02_150405", false)
 
 	userSelectBackupDir, err := cmd.Radio("请选择一个文件夹进行还原", &dirs)
 	if err != nil {
@@ -139,6 +140,7 @@ func RecoverBackupFiles(backupDir string, gitProjectDir string) {
 	}
 	backupDir2Recover := filepath.Join(backupDir, userSelectBackupDir)
 	allFilePaths, err := ReadFilesRecursively(backupDir2Recover)
+
 	if err != nil {
 		fmt.Println("递归读取报错", err)
 	}

@@ -11,7 +11,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/atotto/clipboard"
 	terminal "golang.org/x/term"
@@ -291,4 +293,77 @@ func OpenFolderAndSelectFile(path string) error {
 	default:
 		return fmt.Errorf("不支持的操作系统: %s", runtime.GOOS)
 	}
+}
+
+// sortedItem 结构体存储字符串和时间戳
+type sortedItem struct {
+	value     string
+	timestamp time.Time
+}
+
+// generateRegexFromDateFormat 根据日期格式生成正则表达式
+func generateRegexFromDateFormat(dateFormat string) string {
+	// 规则映射，将日期格式中的符号映射为对应的正则表达式
+	rules := map[string]string{
+		"2006": `\d{4}`, // 年
+		"01":   `\d{2}`, // 月
+		"02":   `\d{2}`, // 日
+		"15":   `\d{2}`, // 时
+		"04":   `\d{2}`, // 分
+		"05":   `\d{2}`, // 秒
+	}
+
+	// 用于构建正则表达式的字符串
+	regexPattern := dateFormat
+
+	// 替换日期格式中的符号为对应的正则表达式
+	for key, pattern := range rules {
+		regexPattern = strings.ReplaceAll(regexPattern, key, pattern)
+	}
+
+	return regexPattern
+}
+
+// SortSliceByInlineDate 按字符串中的日期排序
+// 参数：
+// - slice: 需要排序的字符串slice
+// - dateFormat: 日期时间的格式（例如 "2006_01_02_150405"）
+// - ascending: 如果为 true 则正序排序，否则倒序排序
+func SortSliceByInlineDate(slice []string, dateFormat string, ascending bool) []string {
+	// 生成匹配日期的正则表达式
+	regexPattern := generateRegexFromDateFormat(dateFormat)
+
+	// 定义正则表达式
+	timePattern := regexp.MustCompile(regexPattern)
+
+	// 存储字符串和时间的映射
+	var items []sortedItem
+
+	// 遍历字符串slice，提取时间戳并解析
+	for _, str := range slice {
+		matches := timePattern.FindString(str)
+		if matches != "" {
+			// 将匹配的时间戳转换为标准时间格式
+			timestamp, err := time.Parse(dateFormat, matches)
+			if err == nil {
+				items = append(items, sortedItem{value: str, timestamp: timestamp})
+			}
+		}
+	}
+
+	// 按时间排序
+	sort.Slice(items, func(i, j int) bool {
+		if ascending {
+			return items[i].timestamp.Before(items[j].timestamp)
+		}
+		return items[i].timestamp.After(items[j].timestamp)
+	})
+
+	// 提取排序后的结果
+	var sortedSlice []string
+	for _, item := range items {
+		sortedSlice = append(sortedSlice, item.value)
+	}
+
+	return sortedSlice
 }
