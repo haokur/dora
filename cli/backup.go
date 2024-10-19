@@ -26,8 +26,6 @@ var backupCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println(111)
-
 		fileName := backupFileName
 		if fileName == "" {
 			fileName = filepath.Base(currentWorkGitDir)
