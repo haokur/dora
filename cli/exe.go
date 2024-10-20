@@ -15,7 +15,8 @@ var outputCmd string
 
 var generateExecCmd = &cobra.Command{
 	Use:   "exe",
-	Short: "生成可执行文件；\n例如：dora exe -i \"cd ~ && ls && echo Hello World\" -o get_root_list",
+	Short: "生成可执行文件",
+	Long:  "生成可执行文件；例如：dora exe -i \"cd ~ && ls && echo Hello World\" -o get_root_list",
 	Run: func(cmd *cobra.Command, args []string) {
 		if inputCmd != "" && outputCmd != "" {
 			// 指定文件生成的临时目录：用户主目录下的 `~/dora/.cache`

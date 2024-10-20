@@ -3,6 +3,7 @@ package tools
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -164,7 +165,7 @@ func readDirRecursively(dirPath string, filePaths *[]string, rootPath string) er
 		relativePath, _ := filepath.Rel(rootPath, fullPath)
 
 		// 如果是目录，递归处理
-		if entry.IsDir() {
+		if entry.IsDir() && !strings.Contains(entry.Name(), "node_modules") {
 			err := readDirRecursively(fullPath, filePaths, rootPath)
 			if err != nil {
 				return err
@@ -181,6 +182,84 @@ func ReadFilesRecursively(dirPath string) ([]string, error) {
 	result := []string{}
 	err := readDirRecursively(dirPath, &result, dirPath)
 	return result, err
+}
+
+// 浅层读取文件夹下所有文件
+type IFileItem struct {
+	Path         string
+	Name         string
+	Size         int64
+	LastModified time.Time
+}
+
+// 读取第一层
+func ReadFilesShallowly(dirPath string) ([]IFileItem, error) {
+	// 读取目录下的所有条目（文件和子目录）
+	entries, err := os.ReadDir(dirPath)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []IFileItem{}
+
+	// 遍历条目
+	for _, entry := range entries {
+		// 检查是否是文件
+		if !entry.IsDir() {
+			// 获取完整的文件路径
+			fullPath := filepath.Join(dirPath, entry.Name())
+
+			// 使用 os.Stat 获取文件的详细信息
+			info, err := os.Stat(fullPath)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+
+			// 获取文件大小和最后修改时间
+			size := info.Size()       // 文件大小 (字节)
+			modTime := info.ModTime() // 文件的最后修改时间
+
+			result = append(result, IFileItem{
+				Path:         fullPath,
+				Name:         entry.Name(),
+				Size:         size,
+				LastModified: modTime,
+			})
+		}
+	}
+
+	return result, nil
+}
+
+// 排序文件的函数
+func SortFiles(files []IFileItem, sortBy string) {
+	switch sortBy {
+	case "name":
+		sort.Slice(files, func(i, j int) bool {
+			return files[i].Name > files[j].Name
+		})
+	case "size":
+		sort.Slice(files, func(i, j int) bool {
+			return files[i].Size > files[j].Size
+		})
+	case "modtime":
+		sort.Slice(files, func(i, j int) bool {
+			return files[i].LastModified.After(files[j].LastModified)
+		})
+	default:
+		fmt.Println("Unknown sort method, using name by default")
+		sort.Slice(files, func(i, j int) bool {
+			return files[i].Name < files[j].Name
+		})
+	}
+}
+
+// 反转文件顺序的函数
+func ReverseSlice[T any](slice []T) {
+	for i, j := 0, len(slice)-1; i < j; i, j = i+1, j-1 {
+		slice[i], slice[j] = slice[j], slice[i]
+	}
 }
 
 // 获取当前网络IP
@@ -366,4 +445,59 @@ func SortSliceByInlineDate(slice []string, dateFormat string, ascending bool) []
 	}
 
 	return sortedSlice
+}
+
+func FormatSize(size int64) string {
+	// 定义单位
+	const (
+		KB = 1024
+		MB = KB * 1024
+		GB = MB * 1024
+		TB = GB * 1024
+	)
+
+	// 根据大小选择合适的单位进行转换
+	switch {
+	case size >= TB:
+		return fmt.Sprintf("%.2f TB", float64(size)/float64(TB))
+	case size >= GB:
+		return fmt.Sprintf("%.2f GB", float64(size)/float64(GB))
+	case size >= MB:
+		return fmt.Sprintf("%.2f MB", float64(size)/float64(MB))
+	case size >= KB:
+		return fmt.Sprintf("%.2f KB", float64(size)/float64(KB))
+	default:
+		return fmt.Sprintf("%d B", size)
+	}
+}
+
+// 复制文件，源路径复制到目标路径
+func CopyFile(srcPath, dstPath string) error {
+	// 打开源文件
+	srcFile, err := os.Open(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to open source file: %w", err)
+	}
+	defer srcFile.Close()
+
+	// 创建目标文件
+	dstFile, err := os.Create(dstPath)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file: %w", err)
+	}
+	defer dstFile.Close()
+
+	// 复制文件内容
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return fmt.Errorf("failed to copy file: %w", err)
+	}
+
+	// 确保文件写入完成
+	err = dstFile.Sync()
+	if err != nil {
+		return fmt.Errorf("failed to sync file: %w", err)
+	}
+
+	return nil
 }
